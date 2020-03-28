@@ -12,6 +12,7 @@ Then a little bit of data cleanup.
 Combined all into 'Combined.csv'
 
 Output to 'samplemap.html' a simple interactive Map.
+The size of the circle over the states is proportional to the number of COVID-19 cases.
 Hoverover a State to see details.
 
 This is as far as I got :(
