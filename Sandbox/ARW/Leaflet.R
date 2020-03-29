@@ -3,20 +3,34 @@ library(tidyverse)
 library(leaflet.extras)
 
 mydata<-read.csv("/Users/andywilson1/Documents/GitHub/covid19perspective/Sandbox/MWK/Combined.csv")
+#BRFSS
+brfss <- read.csv("/Users/andywilson1/Desktop/Weight/behavioral-risk-factor-surveillance-system-brfss-prevalence-data-2011-to-present.csv")
+brfss$State <- brfss$locationabbr
+brfss_trim <- brfss %>%
+  filter(year == 2018) %>% 
+  filter(break_out =="Overall") %>%
+  filter(question == "Health Status (variable calculated from one or more BRFSS questions)") %>%
+  filter(response == "Fair or Poor Health") %>%
+  select(State, data_value)
+
+mydata <- merge(mydata, brfss_trim, by="State", all=F)
+
 states <- geojsonio::geojson_read("/Users/andywilson1/Desktop/Leaflet/gz_2010_us_040_00_500k.json", what = "sp")
 mydata$NAME<-mydata$State_Name
 
 mydf <- sp::merge(states, mydata, by="NAME", all=F)
 
-mydf$CovProp100k <- round((mydf$Covid19Positive/mydf$Pop)*100000)
+mydf$CovRisk <- log(round((mydf$Covid19Positive/mydf$Pop)*100000))*(mydf$data_value/100)
 
-head(mydf$State_Name)
+summary(mydf$CovRisk)
 
 labels <- paste("<b>", mydf$State_Name,"</b>",
                 "<br/>",
-                "3/xx/2020 Count per 100,000 = ", mydf$CovProp100k,
+                "Risk score = ", round(mydf$CovRisk,3),
                 "<br/>",
-                "Percent change from prior day = ", "will calculate", "%")
+                "COVID confirmed cases per 100k :", round((mydf$Covid19Positive/mydf$Pop)*100000),
+                "<br/>",
+                "Percent in poor or fair health (BRFSS) = ", mydf$data_value, "%")
 
 m <- leaflet(mydf)%>%
   setView(-96, 37.8, 5) %>%
@@ -25,11 +39,11 @@ m <- leaflet(mydf)%>%
     accessToken = Sys.getenv('MAPBOX_ACCESS_TOKEN')))
 
 
-pal <- colorNumeric(palette = "Reds", domain = mydf$CovProp100k)
+pal <- colorNumeric(palette = "RdYlBu", domain = c(0:1), reverse =TRUE)
 
 
 mm<- m %>% addPolygons(
-  fillColor = pal(mydf$CovProp100k),
+  fillColor = pal(mydf$CovRisk),
   weight = 2,
   opacity = 1,
   color = "black",
@@ -43,27 +57,18 @@ mm<- m %>% addPolygons(
     dashArray = "",
     fillOpacity = 0.7,
     bringToFront = TRUE))%>%
-  addSearchOSM() %>%
   addResetMapButton() %>%
-  addLegend(title = "COVID cases per 100,000 pop", 
+  addLegend(title = "COVID Risk score", 
                                 position = "bottomleft",
                                 pal=pal,
-                                values = c(0:max(mydf$CovProp100k)))
-
+                                values = c(0:1))
+mm
 
 library(htmlwidgets)
 
 saveWidget(mm, file = "/Users/andywilson1/Documents/GitHub/covid19perspective/Sandbox/ARW/myMap.html")
 
 
-#BRFSS
-brfss <- read.csv("/Users/andywilson1/Desktop/Weight/behavioral-risk-factor-surveillance-system-brfss-prevalence-data-2011-to-present.csv")
-
-brfss_trim <- brfss %>%
-  filter(year == 2018) %>% 
-  filter(break_out =="Overall") %>%
-  filter(question == "Health Status (variable calculated from one or more BRFSS questions)") %>%
-  filter(response == "Fair or Poor Health")
 
 write.csv(brfss_trim, "/Users/andywilson1/Documents/GitHub/covid19perspective/RawData/BRFSS data descriptions/brfss Fair or Poor Health by state.csv")
 
