@@ -124,7 +124,7 @@ m = folium.Map(location=[39.381266, -97.922211], tiles='cartodbpositron', min_zo
 def formatNumber(i,fld,incBar = True):
     perc = ((Combined.iloc[i][fld] / Combined.iloc[i]['AllDeaths'])*100)
     if incBar:
-        return str("{:,}".format(Combined.iloc[i][fld]))+'</td><td class="bar bar'+str(int(perc)+1)+'"><span style="color: grey;">'+str(int(round(perc,0)))+'%</span>'
+        return str("{:,}".format(Combined.iloc[i][fld]))+'</td><td class="bar bar'+str(int(perc)+1)+'"><span style="color: grey;">'+str(round(perc,2))+'%</span>'
     else:
         return str("{:,}".format(Combined.iloc[i][fld]))+'&nbsp;&nbsp;&nbsp;'+str(round(perc,3))+'%'
 
