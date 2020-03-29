@@ -169,7 +169,7 @@ for i in range(0, len(Combined)-1):
                     '<tr><td>Tested Positive:</td><td>'+str(Combined.iloc[i]['Covid19Positive'])+'</td></tr>'+
                     '<tr><td>Tested Negatives:</td><td>'+str(Combined.iloc[i]['Covid19Negative'])+'</td></tr>'+
                     '<tr><td>Hospitalised:</td><td>'+str(Combined.iloc[i]['Covid19Hospitalized'])+'</td></tr>'+
-                    '<tr><td>Deaths:</td><td>'+str(formatNumber(i,'Covid19Death'))+'</td></tr></table>'+
+                    '<tr><td>Deaths:</td><td>'+str(Combined.iloc[i]['Covid19Death'])+'</td></tr></table>'+
                     '<tr><td>Risk Value:</td><td>{risk}</td></tr></table>'.format(risk=round(Combined.iloc[i]['RiskValue'],2)),
         radius=int(Combined.iloc[i]['Covid19Positive'])+int(Combined.iloc[i]['Covid19Negative']),
         fill ='crimson'
