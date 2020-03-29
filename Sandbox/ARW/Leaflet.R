@@ -73,3 +73,28 @@ saveWidget(mm, file = "/Users/andywilson1/Documents/GitHub/covid19perspective/Sa
 write.csv(brfss_trim, "/Users/andywilson1/Documents/GitHub/covid19perspective/RawData/BRFSS data descriptions/brfss Fair or Poor Health by state.csv")
 
 
+## Velocities
+CovJHU_3.28 <- read.csv(url("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-28-2020.csv"))
+CovJHU_3.27 <- read.csv(url("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-27-2020.csv"))
+
+#Get cases by state
+
+CovJHU_3.28_sum <- CovJHU_3.28 %>%
+  filter(Country_Region =="US") %>%
+  group_by(Province_State) %>%
+  summarise(total_confirmed28 = sum(Confirmed), total_deaths28= sum(Deaths))
+
+CovJHU_3.27_sum <- CovJHU_3.27 %>%
+  filter(Country_Region =="US") %>%
+  group_by(Province_State) %>%
+  summarise(total_confirmed27 = sum(Confirmed), total_deaths27= sum(Deaths))
+
+COV27_28 <-merge(CovJHU_3.28_sum, CovJHU_3.27_sum)
+
+COV27_28$confirm_change <-((COV27_28$total_confirmed28-COV27_28$total_confirmed27)/COV27_28$total_confirmed27)*100
+COV27_28$deaths_change <-((COV27_28$total_deaths28-COV27_28$total_deaths27)/COV27_28$total_deaths27)*100
+COV27_28$State_Name <- COV27_28$Province_State
+
+Updated<- merge(COV27_28, mydata, by="State_Name", all=F)
+
+write.csv(Updated, "/Users/andywilson1/Documents/GitHub/covid19perspective/RawData/BRFSS data descriptions/Updated.csv")
