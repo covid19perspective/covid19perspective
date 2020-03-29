@@ -57,7 +57,7 @@ labels <- paste("<b>", mydf$State_Name,"</b>",
                 "<br/>",
                 "Percent in poor or fair health (BRFSS) = ", mydf$data_value, "%",
                 "<br/>",
-                "Percent daily change = " , round(mydf$confirm_change, 4) , "%")
+                "Percent daily change = " , round(mydf$confirm_change, 2) , "%")
 
 m <- leaflet(mydf)%>%
   setView(-96, 37.8, 5) %>%
@@ -75,14 +75,14 @@ mm<- m %>% addPolygons(
   opacity = 1,
   color = "black",
   dashArray = "1",
-  fillOpacity = 0.7,
+  fillOpacity = 0.3,
   label = mydf$State_Name,
   popup  = labels,
   highlight = highlightOptions(
     weight = 2,
     color = "#666",
     dashArray = "",
-    fillOpacity = 0.7,
+    fillOpacity = 0.6,
     bringToFront = TRUE))%>%
   addResetMapButton() %>%
   addLegend(title = "COVID Risk score", 
