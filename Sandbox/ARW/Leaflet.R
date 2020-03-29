@@ -56,3 +56,15 @@ library(htmlwidgets)
 saveWidget(mm, file = "/Users/andywilson1/Documents/GitHub/covid19perspective/Sandbox/ARW/myMap.html")
 
 
+#BRFSS
+brfss <- read.csv("/Users/andywilson1/Desktop/Weight/behavioral-risk-factor-surveillance-system-brfss-prevalence-data-2011-to-present.csv")
+
+brfss_trim <- brfss %>%
+  filter(year == 2018) %>% 
+  filter(break_out =="Overall") %>%
+  filter(question == "Health Status (variable calculated from one or more BRFSS questions)") %>%
+  filter(response == "Fair or Poor Health")
+
+write.csv(brfss_trim, "/Users/andywilson1/Documents/GitHub/covid19perspective/RawData/BRFSS data descriptions/brfss Fair or Poor Health by state.csv")
+
+
