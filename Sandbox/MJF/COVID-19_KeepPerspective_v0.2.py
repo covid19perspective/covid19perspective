@@ -122,9 +122,9 @@ Combined.to_csv('Combined.csv', index=False)
 m = folium.Map(location=[39.381266, -97.922211], tiles='cartodbpositron', min_zoom=3, max_zoom=7, zoom_start=5)
 
 def formatNumber(i,fld,incBar = True):
-    perc = (Combined.iloc[i][fld] / Combined.iloc[i]['Pop']) * 100
+    perc = ((Combined.iloc[i][fld] / Combined.iloc[i]['Pop'])*100)
     if incBar:
-        return str("{:,}".format(Combined.iloc[i][fld]))+'</td><td class="bar bar'+str(int(round(perc)+1))+'">'+str(round(perc,3))+'%'
+        return str("{:,}".format(Combined.iloc[i][fld]))+'</td><td class="bar bar'+str(int(perc)+1)+'">'+str(int(round(perc*10000,0)))
     else:
         return str("{:,}".format(Combined.iloc[i][fld]))+'&nbsp;&nbsp;&nbsp;'+str(round(perc,3))+'%'
 
@@ -140,10 +140,10 @@ folium.Choropleth(
     data=Combined,
     columns=['State', 'RiskValue'],
     key_on='feature.id',
-    fill_color='YlGn',
+    fill_color='RdYlBu',
     fill_opacity=0.7,
     line_opacity=0.2,
-    legend_name='Number of People Tested Positive for COVID-19'
+    legend_name='State Risk Value for COVID-19'
 ).add_to(m)
 
 folium.LayerControl().add_to(m)
@@ -157,7 +157,7 @@ for i in range(0, len(Combined)-1):
                     'State : '+str(Combined.iloc[i]['State_Name'])+'<br/>'+
                     'Population : '+str("{:,}".format(Combined.iloc[i]['Pop']))+'<br/>'+
                     'Total Deaths per year: '+formatNumber(i,'AllDeaths',False)+'<br/>'+
-                    '<br/>This is made up of (inc %age of State population):<table>'+
+                    '<br/>This is made up of (cases per 100K):<table>'+
                     '<tr><td>Cancer Deaths:</td><td>'+formatNumber(i,'CancerDeaths')+'</td></tr>'+
                     '<tr><td>Heart Disease Deaths:</td><td>'+formatNumber(i,'HeartDiseaseDeaths')+'</td></tr>'+
                     '<tr><td>Accidental Deaths:</td><td>'+formatNumber(i,'AccidentsDeaths')+'</td></tr>'+
@@ -169,7 +169,8 @@ for i in range(0, len(Combined)-1):
                     '<tr><td>Tested Positive:</td><td>'+formatNumber(i,'Covid19Positive')+'</td></tr>'+
                     '<tr><td>Tested Negatives:</td><td>'+formatNumber(i,'Covid19Negative')+'</td></tr>'+
                     '<tr><td>Hospitalised:</td><td>'+formatNumber(i,'Covid19Hospitalized')+'</td></tr>'+
-                    '<tr><td>Deaths:</td><td>'+formatNumber(i,'Covid19Death')+'</td></tr></table>',
+                    '<tr><td>Deaths:</td><td>'+formatNumber(i,'Covid19Death')+'</td></tr></table>'+
+                    '<tr><td>Risk Value:</td><td>{risk}</td></tr></table>'.format(risk=round(Combined.iloc[i]['RiskValue'],2)),
         radius=int(Combined.iloc[i]['Covid19Positive'])+int(Combined.iloc[i]['Covid19Negative']),
         fill ='crimson'
         
