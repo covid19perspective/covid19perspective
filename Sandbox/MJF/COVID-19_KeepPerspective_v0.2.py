@@ -140,8 +140,8 @@ folium.Choropleth(
     data=Combined,
     columns=['State', 'RiskValue'],
     key_on='feature.id',
-    fill_color='RdYlBu',
-    fill_opacity=0.7,
+    fill_color='YlOrRd',
+    fill_opacity=0.6,
     line_opacity=0.2,
     legend_name='State Risk Value for COVID-19'
 ).add_to(m)
