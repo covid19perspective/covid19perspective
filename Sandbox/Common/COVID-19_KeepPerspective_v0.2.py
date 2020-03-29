@@ -16,6 +16,8 @@ import pandas as pd
 import folium
 import re # for regular expressions
 import warnings
+import numpy as np
+from math import log
 warnings.filterwarnings('ignore')
 
 getFreshData = False # Toggle this to pull fresh data, else save the call and use an already prepared version
@@ -41,8 +43,18 @@ if getFreshData:
     USData.isnull().sum()
     USData.info()
     USData.to_csv('./RawUSCovidData.csv', index=False)   
+    updated = pd.read_csv('./updated.csv')
+    USData = USData.reset_index().set_index('state').join(updated.set_index('State')[['data_value','confirm_change']],how='left')
+    USData.reset_index().set_index('state',inplace=True)
+    USData.rename(columns={'index':'state'},inplace=True)
+    USData.drop('state',axis=1,inplace=True)
 else:
     USData = pd.read_csv('./RawUSCovidData.csv', parse_dates=['date'])
+    updated = pd.read_csv('./updated.csv')
+    USData = USData.reset_index().set_index('state').join(updated.set_index('State')[['data_value','confirm_change']],how='left')
+    USData.reset_index().set_index('state',inplace=True)
+    USData.rename(columns={'index':'state'},inplace=True)
+    USData.drop('state',axis=1,inplace=True)
 
 # Pulled a PDF from CDC, and used online tool to extract needed pages, and parse to Excel
 # Then a little bit of data cleanup
@@ -73,8 +85,20 @@ Combined['HomicideDeaths'] = DeathData['Number.7'].apply(lambda x: re.sub(",", "
 Combined['HomicideDeathsPer100k'] = DeathData['AgeAdjustedRate.7']
 
 
-Combined = pd.merge(Combined, USData[['state', 'positive', 'negative', 'pending', 'hospitalized', 'death']], left_on='State', right_on='state', how='left').drop(['state'],axis=1)
-Combined.rename(columns={'positive': 'Covid19Positive', 'negative': 'Covid19Negative','pending': 'Covid19Pending', 'hospitalized': 'Covid19Hospitalized', 'death': 'Covid19Death'}, inplace=True)
+Combined = pd.merge(Combined, USData.reset_index()[['state', 
+                                      'positive', 
+                                      'negative', 
+                                      'pending', 
+                                      'hospitalized', 
+                                      'death',
+                                      'data_value',
+                                      'confirm_change']], left_on='State', right_on='state', how='left')
+
+Combined.rename(columns={'positive': 'Covid19Positive',
+                          'negative': 'Covid19Negative',
+                          'pending': 'Covid19Pending', 
+                          'hospitalized': 'Covid19Hospitalized', 
+                          'death': 'Covid19Death'}, inplace=True)
 
 # Add in Population Data - downloaded from https://worldpopulationreview.com/states/
 PopulationData = pd.read_csv('USPopulationData.csv')
@@ -82,6 +106,7 @@ Combined = pd.merge(Combined, PopulationData[['State','Pop']], left_on='State_Na
 Combined = Combined.dropna()
 Combined['Pop'] = Combined['Pop'].astype(int)
 Combined['CovidByPop'] = Combined.apply(lambda x: (x['Covid19Positive']/x['Pop'])*100000,axis=1)
+Combined['RiskValue'] = Combined.apply(lambda x: ((x['Covid19Positive']/x['Pop'])*100000)*(x['data_value']/100)*(x['confirm_change']/12),axis=1 )
 
 convertToInt = ['AllDeaths', 'AllDeathsPer100k', 'CancerDeaths', 'CancerDeathsPer100k', 'HeartDiseaseDeaths', 'HeartDiseaseDeathsPer100k', \
                 'AccidentsDeaths', 'AccidentsDeathsPer100k', 'MotorVehicleDeaths', 'MotorVehicleDeathsPer100k', 'PoisoningDeaths', 'PoisoninDeathsPer100k', \
@@ -111,8 +136,9 @@ state_data = pd.read_csv(state_unemployment)
 folium.Choropleth(
     geo_data=state_geo,
     name='choropleth',
+    threshold_scale = np.logspace(-1,log(Combined['RiskValue'].max()+1,10),10),
     data=Combined,
-    columns=['State', 'CovidByPop'],
+    columns=['State', 'RiskValue'],
     key_on='feature.id',
     fill_color='YlGn',
     fill_opacity=0.7,
